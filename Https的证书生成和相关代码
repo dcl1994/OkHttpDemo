@@ -1,0 +1,139 @@
+
+
+
+
+演示Https双向验证实例，Web容器为Tomcat。
+
+1.创建服务器KeyStore。
+定位到服务端 C:\tomcat\apache-tomcat-7.0.67\conf\keys
+命令:keytool -genkey -alias server_jks_cennavi -keyalg RSA -keypass 123456 -storepass 123456 -keystore server.jks -validity 3650.
+
+keytool命令如下：
+
+-genkey         在用户主目录中创建一个默认文件".jks",还会产生一个server_jks_cennavi的别名，server_jks_cennavi中包含用户的公钥、私钥和证书
+-alias             产生别名
+-keystore      指定密钥库的名称(产生的各类信息将不在.jks文件中
+-keyalg          指定密钥的算法
+-validity          指定创建的证书有效期多少天
+-keysize        指定密钥长度
+-storepass   指定密钥库的密码
+-keypass      指定别名条目的密码
+-dname        指定证书拥有者信息
+在相对应的 C:\tomcat\apache-tomcat-7.0.67\conf\keys 目录下你能看到一个server.jks文件。
+
+
+
+3.导出服务端证书。
+
+定位到服务端 C:\tomcat\apache-tomcat-7.0.67\conf\keys 目录:keytool -export -trustcacerts -alias server_jks_cennavi  -file server.cer -keystore  server.jks -storepass 123456
+
+在相对于的 C:\tomcat\apache-tomcat-7.0.67\conf\keys 目录下你能看到一个server.cer文件。
+
+
+
+4.创建客户端KeyStore。
+定位到服务端 C:\tomcat\apache-tomcat-7.0.67\conf\keys 目录: keytool -genkey -alias client_p12_cennavi -keyalg RSA -keypass 123456 -storepass 123456 -keystore client.p12 -validity 3650 -storetype PKCS12
+
+在相对应的 C:\tomcat\apache-tomcat-7.0.67\conf\keys 目录下你能看到一个client.p12文件。
+5.导出客户端Cer证书。
+
+定位到服务端 C:\tomcat\apache-tomcat-7.0.67\conf\keys 目录:keytool -export -trustcacerts -alias client_p12_cennavi  -file client.cer -keystore  client.p12 -storepass 123456 -storetype PKCS12
+
+在相对于的 C:\tomcat\apache-tomcat-7.0.67\conf\keys目录下你能看到一个client.cer文件。
+
+
+
+6.交换导入服务端和客户端证书，作为双方信任证书。
+
+将客户端证书导入服务端keystore:keytool -import -trustcacerts -alias client_p12_cennavi -file client.cer -keystore server.jks
+
+将服务端证书导入客户端keystore:keytool -import -trustcacerts -alias server_jks_cennavi -file server.cer -keystore client.jks
+
+7.在tomcat的C:\tomcat\apache-tomcat-7.0.67\conf的server文件中配置
+
+<Connector port="8443" protocol="org.apache.coyote.http11.Http11Protocol"
+                maxThreads="150" SSLEnabled="true" scheme="https" secure="true"
+				keystoreFile="C:/tomcat/apache-tomcat-7.0.67/conf/keys/server.jks"
+				keystorePass="123456"
+                clientAuth="true" sslProtocol="TLS"
+				truststoreFile="C:/tomcat/apache-tomcat-7.0.67/conf/keys/server.jks"
+				truststorePass="123456"
+                />
+clientAuth="true" 双向认证 clientAuth="false" 单向认证，只认证服务器端的
+
+8.在Android端的代码中（用的是OkHttp）：
+public static OkHttpClient setCertificatesTwo(final URL url,InputStream keyClient,String password,InputStream... certificates) throws Exception {
+        //初始化公钥
+        CertificateFactory factory = CertificateFactory.getInstance("X.509");
+        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+        keyStore.load(null);
+        int index = 0;
+        for (InputStream is : certificates) {
+            String certificateAlias = Integer.toString(index++);
+            keyStore.setCertificateEntry(certificateAlias, factory.generateCertificate(is));
+            try {
+                if (is != null) {
+                    is.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        //初始化Android端的密钥
+        KeyStore keyClientStore = KeyStore.getInstance("PKCS12");
+        keyClientStore.load(keyClient, password.toCharArray());
+        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        keyManagerFactory.init(keyClientStore,password.toCharArray());
+//        KeyManager keyManager = new MyX509KeyManager(keyClientStore,password,keyManagerFactory.getKeyManagers());
+//        KeyManager[] keyManagerArray = keyManagerFactory.getKeyManagers();
+//        keyManagerArray[0] = keyManager;
+
+        SSLContext sslContent = SSLContext.getInstance("TLS");
+        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        trustManagerFactory.init(keyStore);
+        sslContent.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());
+        OkHttpClient client = new OkHttpClient.Builder().sslSocketFactory(sslContent.getSocketFactory()).hostnameVerifier(new HostnameVerifier() {
+            @Override
+            public boolean verify(String hostname, SSLSession session) {
+                if (hostname.equals(url.getHost())){
+                    return true;
+                }
+                return false;
+            }
+        }).build();
+        return client;
+    }
+9.Java客户端代码：
+public class HttpsDemo {
+	private static final String SERVLET_JSK = "C:/tomcat/apache-tomcat-7.0.67/conf/keys/client.jks";
+	private static final String SERVLET_PASSWORD = "123456";
+	private static final String CLIENT_P12 = "C:/tomcat/apache-tomcat-7.0.67/conf/keys/client.p12";
+	private static final String CLIENT_PASSWORD = "123456";
+	private static final String KEY_TYPE = "PKCS12";
+
+	public static void main(String[] args) throws Exception {
+		System.setProperty("javax.net.ssl.keyStore", CLIENT_P12);
+		System.setProperty("javax.net.ssl.keyStorePassword", CLIENT_PASSWORD);
+		System.setProperty("javax.net.ssl.keyStoreType", KEY_TYPE);
+		// 设置客户端信任证书
+		System.setProperty("javax.net.ssl.trustStore", SERVLET_JSK);
+		System.setProperty("javax.net.ssl.trustStorePassword", "123456");
+//		// 主机名称验证策略
+		HttpsURLConnection.setDefaultHostnameVerifier(HttpsURLConnection
+				.getDefaultHostnameVerifier());
+		String address = "https://localhost:8443/LearnNew/servlet/FirstServlet?price=k";
+		URL url = new URL(address);
+		URLConnection conn = url.openConnection();
+		InputStream input = conn.getInputStream();
+		int result = input.read();
+		System.out.println(result);
+
+
+	}
+10.测试运行。
+
+演示Https单向向验证实例，Web容器为Tomcat。
+keytool -genkey -alias yyw_servlet -keyalg RSA -keystore yyw_server.jks -validity 3600 -storepass 123456
+keytool -export -alias yyw_servlet -file yyw_servlet.cer -keystore yyw_server.jks -storepass 123456
+keytool -list -v -alias yyw_servlet -keystore yyw_server.jks -storepass 123456 -storetype Jks
+keytool -printcert -v -file yyw_servlet.cer

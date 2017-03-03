@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.dcl.demo.MainActivity">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="我的第一个okhttp"
+        android:textSize="15sp"
+        android:layout_marginTop="15dp"
+        android:gravity="center_horizontal"
+        />
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="用户名:"
+        />
+    <EditText
+        android:id="@+id/username"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="密码:"
+        />
+    <EditText
+        android:id="@+id/password"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content" />
+</LinearLayout>
+
+
+    <Button
+        android:id="@+id/login_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="发送一个get请求"
+        />
+    <Button
+        android:id="@+id/get_cookie_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="发送post请求"
+        />
+    <Button
+        android:id="@+id/do_post"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="发送dopost请求到服务器端"
+        />
+    <Button
+        android:id="@+id/do_postfile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="发送一个文件到服务器端"
+        />
+    <TextView
+        android:id="@+id/cookie_show_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:textColor="#000000"
+        />
+</LinearLayout>
