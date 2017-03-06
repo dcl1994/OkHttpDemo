@@ -15,4 +15,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="点击"/>
+    <TextView
+        android:id="@+id/mytextview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="git测试文本"
+        android:textColor="#e2e2"
+        android:textSize="16sp"
+        android:layout_below="@+id/mybtn"/>
+
 </RelativeLayout>
