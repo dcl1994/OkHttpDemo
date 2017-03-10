@@ -7,14 +7,19 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Response;
+import util.App;
 import util.MyApplication;
 import util.OkHttpUtil;
 import util.UrlUtil;
@@ -24,7 +29,6 @@ public class RequestActivity extends Activity implements View.OnClickListener {
     JSONArray jsonArray;
     JSONObject jsonObject;
     String responseData = null;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,12 +73,6 @@ public class RequestActivity extends Activity implements View.OnClickListener {
      * 登录的异步处理
      */
     public class LoginAsyncTask extends AsyncTask<String, Void, JSONObject> {
-        /**
-         * 解析json
-         *
-         * @param params
-         * @return
-         */
         @Override
         protected JSONObject doInBackground(String... params) {
             try {
@@ -85,28 +83,54 @@ public class RequestActivity extends Activity implements View.OnClickListener {
             return jsonObject;
         }
         /**
-         * 更新UI
+         * 解析json更新UI
          *
          * @param jsonObject
          */
         @Override
         protected void onPostExecute(JSONObject jsonObject) {
             try {
-                jsonObject = new JSONObject(responseData);
                 jsonArray = jsonObject.getJSONArray("JsonArry");
-                L.e(jsonArray + "");
-                if (jsonArray.getJSONObject(0).opt("message").equals("success")) {
-                    Toast.makeText(MyApplication.getContext(), "登录成功", Toast.LENGTH_SHORT).show();
-                    //进行跳转等操作
-                } else {
-                    //登录失败给出提示
+                Gson gson=new Gson();
+                List<App> applist=gson.fromJson(String.valueOf(jsonArray),new TypeToken<List<App>>(){}.getType());
+//                List<App> applist = jsonArray.getJSONArray()
+                L.e(applist.get(0).getUsername());
+                for (App app:applist){
+                    L.e(app.getUsername());
+                    L.e(app.getMessage());
+                    L.e(app.getDescription());
+                    L.e(app.getHeadUrl());
+
+                    if (app.getMessage().equals("success")){
+                        Toast.makeText(MyApplication.getContext(), "登录成功", Toast.LENGTH_SHORT).show();
+                    }else {
+                        //登录失败给出提示
                     String hint = jsonArray.getJSONObject(0).opt("description").toString();
                     Toast.makeText(MyApplication.getContext(), hint, Toast.LENGTH_SHORT).show();
+                    }
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
+
+
+//            try {
+//                jsonObject = new JSONObject(responseData);
+//                jsonArray = jsonObject.getJSONArray("JsonArry");
+//                L.e(jsonArray + "");
+//                if (jsonArray.getJSONObject(0).opt("message").equals("success")) {
+//                    Toast.makeText(MyApplication.getContext(), "登录成功", Toast.LENGTH_SHORT).show();
+//                    //进行跳转等操作
+//                } else {
+//                    //登录失败给出提示
+//                    String hint = jsonArray.getJSONObject(0).opt("description").toString();
+//                    Toast.makeText(MyApplication.getContext(), hint, Toast.LENGTH_SHORT).show();
+//                }
+//            } catch (JSONException e) {
+//                e.printStackTrace();
+//            }
+//        }
     }
 
 }
