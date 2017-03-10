@@ -1,0 +1,12 @@
+# Default github user(13148700419@163.com)
+
+Host github.com
+HostName github.com
+PreferredAuthentications publickey
+IdentityFile /c/Users/szjdj/.ssh/id_rsa
+
+# second user(13714515160@163.com)		#建一个GitHub别名，新建的账号使用这个别名做克隆和更新
+Host github2
+HostName github.com
+PreferredAuthentications publickey
+IdentityFile /c/Users/szjdj/.ssh/id_rsa2

@@ -10,7 +10,7 @@ public class L {
 
 
     private static boolean debug=true;
-    private static String TAG="ok_Http";
+    private static String TAG="ok_http";
 
     public static void  e(String msg){
         if (debug){
